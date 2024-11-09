@@ -93,14 +93,14 @@ function AddNewInterview() {
                                 />
 
                               </div>
-                              <div className='my-3'>
+                              <div className='mt-1 my-3'>
                                 <label>Job Description/Tech Stack (In Short)</label>
                                 <Textarea
                                 onChange={(event)=>setTechStack(event.target.value)}
                                 placeholder="Example: React, Angular, Node, Next, Mongo" required/>
 
                               </div>
-                              <div className='my-3'>
+                              <div className='mt-1 my-3'>
                                 <label>Years of experience</label>
                                 <Input 
                                 onChange={(event)=>setJobExperience(event.target.value)}

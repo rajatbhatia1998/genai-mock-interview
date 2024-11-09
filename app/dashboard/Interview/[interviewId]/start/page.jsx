@@ -31,9 +31,14 @@ function Start({ params }) {
   useEffect(() => {
     console.log("interviewData in start ", interviewData)
     if(interviewData.docId){
-      let mockResp = JSON.parse(interviewData.data.jsonMockResponse)
-      console.log(mockResp)
-      setJsonMockQuestion(mockResp)
+      try {
+        let mockResp = JSON.parse(interviewData.data.jsonMockResponse)
+        console.log(mockResp)
+        setJsonMockQuestion(mockResp)
+      }catch(err){
+        
+      }
+      
     }
   }, [interviewData])
 
@@ -42,7 +47,10 @@ function Start({ params }) {
       const q = query(collection(db, "mockInterview"), where("mockId", "==", id))
       const querySnapshot = await getDocs(q)
       querySnapshot.forEach(doc => {
-        setInterviewData({ docId: doc.id, data: doc.data() })
+        if(doc.id){
+          setInterviewData({ docId: doc.id, data: doc.data() })
+        }
+       
 
       })
     } catch (err) {
@@ -62,7 +70,7 @@ function Start({ params }) {
     }
   }
   return jsonMockQuestions && (
-    <div className='my-10 flex flex-row justify-between '>
+    <div className='my-10 flex flex-col md:flex-row justify-between '>
        
         <Question mockQuestions={jsonMockQuestions} activeIndex={activeQuestionIndex}/>
         <div>

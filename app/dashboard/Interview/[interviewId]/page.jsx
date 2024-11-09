@@ -41,11 +41,11 @@ function Interview({ params }) {
 
     }
     return (
-        <div className='my-10 flex flex-col'>
+        <div className='my-10 flex flex-col md:flex-col'>
 
 
             <h2 className='font-bold text-2xl'>Let's get started</h2>
-            <div className='flex flex-row'>
+            <div className='flex flex-col md:flex-row'>
 
                 <div className='px-1 mr-10'>
                     <div className='flex flex-col my-5 border rounded-lg p-5 '>
