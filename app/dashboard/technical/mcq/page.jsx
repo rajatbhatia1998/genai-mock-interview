@@ -151,7 +151,7 @@ export default function MCQScreen() {
         </div>
         <DrawerFooter>
           
-          <Button className=''><Link href={'/dashboard'}>Okay</Link></Button>
+          <Button className=''><Link href={'/dashboard'}>Okay </Link></Button>
           
          
           <DrawerClose>
