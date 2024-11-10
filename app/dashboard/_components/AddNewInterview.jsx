@@ -12,7 +12,7 @@ import {
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
-import LoaderOverlay from "@/components/ui/loader.jsx"
+
 import { chatSession } from '@/utils/GeminiAIModal'
 
 

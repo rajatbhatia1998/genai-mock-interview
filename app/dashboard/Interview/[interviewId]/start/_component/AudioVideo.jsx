@@ -58,8 +58,8 @@ function AudioVideo({mockQuestions,activeIndex,interviewData,questionHandler}) {
     saveToDatabase()
   }
 
-  if((userAnswer.length<10 && userAnswer.length>1) && isRecording){
-    toast('Error while saving your answer, Please record again')
+  if((userAnswer.length<10 && userAnswer.length>1) && !isRecording){
+    // toast('Error while saving your answer, Please record again')
   }
  },[userAnswer])
 

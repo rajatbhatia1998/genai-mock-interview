@@ -1,10 +1,5 @@
-
-
-
-
-
-import { metadata } from '../layout'
 import AddNewInterview from './_components/AddNewInterview'
+import RecentInterview from './_components/RecentInterview'
 export default function Dashboard(){
     return (
         <div className="p-10">
@@ -13,6 +8,9 @@ export default function Dashboard(){
 
             <div className='grid grid-cols-1 md:grid-cols-3 my-5'>
                 <AddNewInterview/>
+            </div>
+            <div className='flex flex-1'>
+                <RecentInterview/>
             </div>
         </div>
     )
