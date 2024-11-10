@@ -1,5 +1,4 @@
 'use client'
-'use strict'
 
 import React,{useEffect,useState} from 'react'
 import { getDocs, doc, where, collection, query, getDoc } from '@firebase/firestore'
@@ -8,12 +7,12 @@ import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
-} from "@/components/ui/collapsible"
+} from "../../../../../components/ui/collapsible"
 import { ChevronsUpDown ,Lightbulb} from "lucide-react"
-import { Button } from '@/components/ui/button'
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
+import { Button } from '../../../../../components/ui/button'
+import { Alert, AlertDescription, AlertTitle } from "../../../../../components/ui/alert"
 import Link from 'next/link'
-import LoaderOverlay from '@/components/ui/loader'
+import LoaderOverlay from '../../../../../components/ui/loader'
 
 
 

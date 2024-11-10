@@ -1,5 +1,17 @@
-/** @type {import('next').NextConfig} */
+
+
+
+import path from 'path'
+const __dirname = new URL('.', import.meta.url).pathname;
 const nextConfig = {
+  webpack: (config) => {
+    config.resolve.alias = {
+      ...config.resolve.alias,
+      '@': path.resolve(__dirname, './'),
+    };
+
+    return config;
+  },
     env:{
             NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY:"pk_test_c3dlZXQtdGFycG9uLTgyLmNsZXJrLmFjY291bnRzLmRldiQ",
             CLERK_SECRET_KEY:"sk_test_lnOeSGmAHJCMUL05NmQBiGMQ05jZYdi306oNC8CEQx",
