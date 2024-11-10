@@ -2,22 +2,24 @@
 
 import { useRouter } from 'next/navigation'
 import { useEffect } from 'react'
-import { useUser } from '@clerk/nextjs'
+import { useAuth } from '@clerk/nextjs'
+
 
 
 
 export default function Home() {
-  const user = useUser().user
+  const { isLoaded, userId, sessionId } = useAuth()
   const router = useRouter()
   useEffect(()=>{
-    if(user?.primaryEmailAddress?.emailAddress){
-      router.push('/dashboard')
-    }else{
-      router.push('/sign-in')
-    }
-    //comment
+    console.log(isLoaded,userId,sessionId)
+    // if(isLoaded && userId){
+    //   router.replace('/dashboard')
+    // }else{
+    //   router.replace('/sign-in')
+    // }
     
   },[])
+
   
   return (
   <div>

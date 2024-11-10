@@ -13,12 +13,14 @@ import { ChevronsUpDown ,Lightbulb} from "lucide-react"
 import { Button } from '@/components/ui/button'
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import Link from 'next/link'
+import LoaderOverlay from '@/components/ui/loader'
 
 
 
 function Feedback({params}) {
 
   const currentInterviewId = params.interviewId
+  const [isLoading,setLoading] = useState(false)
   const [feedbackList,setFeedbackList] = useState([])
   const [total,setTotal] = useState(0)
   useEffect(()=>{
@@ -38,6 +40,7 @@ function Feedback({params}) {
     }
   },[feedbackList])
   const getFeedback = async () => {
+    setLoading(true)
     try {
       const q = query(collection(db, "userAnswers"), where("mockIdRef", "==", currentInterviewId))
       const querySnapshot = await getDocs(q)
@@ -50,7 +53,9 @@ function Feedback({params}) {
       })
       console.log(tempList)
       setFeedbackList(tempList)
+      setLoading(false)
     } catch (err) {
+      setLoading(false)
       console.log(err)
     }
   
@@ -58,7 +63,7 @@ function Feedback({params}) {
  
   return (
     <div className='p-10'>
-
+     {isLoading && <LoaderOverlay/>}
       <h2 className='text-3xl font-bold text-green-500'>Congrations</h2>
       <h2 className='text-2xl font-bold'>Here is your interview feedback</h2>
       <h2 className='font-bold text-blue-600 mt-5'>Your overall rating : {total}/{25}</h2>

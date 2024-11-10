@@ -12,6 +12,7 @@ import {
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
+import LoaderOverlay from "@/components/ui/loader.jsx"
 import { chatSession } from '@/utils/GeminiAIModal'
 
 
@@ -43,14 +44,22 @@ function AddNewInterview() {
     let result = await chatSession.sendMessage(prompt)
     let mockJsonResp = (result.response.text()).replace('```json','').replace('```','')
     console.log(mockJsonResp);
-    setLoading(false)
+    
+   let questionsArray = []
    
+   let temp = JSON.parse(mockJsonResp)
+   console.log("temp",temp)
+   if(temp && temp.questions && temp.question.length>0){
+      questionsArray = temp.questions
+   }else{
+    questionsArray = temp
+   }
     const data = {
       mockId:uuidv4(),
       jobPosition:jobPosition,
       jobDesc:techStack,
       jobExperience:jobExperience,
-      jsonMockResponse:mockJsonResp,
+      jsonMockResponse:questionsArray,
       createdAt:moment().format('DD-MM-yyyy'),
       createdBy:user.primaryEmailAddress.emailAddress
     }
@@ -60,8 +69,12 @@ function AddNewInterview() {
       const docRef = await addDoc(collection(db,"mockInterview"),data)
       console.log("Doc added",docRef.id)
       if(docRef.id){
+     
+        setLoading(false)
         setOpenDialog(false)
         router.push(`/dashboard/Interview/${data.mockId}`)
+       
+       
       }
     }
     catch(err){
@@ -72,6 +85,7 @@ function AddNewInterview() {
   }
   return (
     <div>
+      {/* <LoaderOverlay/> */}
         <div onClick={()=>{setOpenDialog(true)}} className='p-10 border rounded-lg bg-secondary hover:scale-105 hover:shadow-md cursor-pointer'>
             <h2 className='font-bold text-lg text-center'>+ Add New</h2>
             

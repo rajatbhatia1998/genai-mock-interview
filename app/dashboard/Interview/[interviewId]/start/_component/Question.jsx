@@ -22,7 +22,7 @@ function Question({mockQuestions,activeIndex}) {
     <div className='flex-1 p-5 rounded-lg border '>
         <div className='flex flex-1 flex-row items-center text-nowrap flex-wrap justify-around'>
         {mockQuestions.map((question,index)=>{
-            return <h2 className={`my-1 cursor-pointer px-2 py-1 bg-secondary rounded-full text-xs md:text-sm text-center
+            return <h2 key={index} className={`my-1 cursor-pointer px-2 py-1 bg-secondary rounded-full text-xs md:text-sm text-center
              ${activeIndex===index && 'bg-black text-white'}`}>
                   Question #{index+1}</h2>
         })}

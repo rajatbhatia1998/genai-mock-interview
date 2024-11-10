@@ -10,11 +10,13 @@ import Webcam from 'react-webcam'
 import { Button } from '@/components/ui/button'
 import { Lightbulb, WebcamIcon } from 'lucide-react'
 import Link from 'next/link'
+import LoaderOverlay from '@/components/ui/loader'
 
 
 
 function Interview({ params }) {
     const currentInterviewId = params.interviewId
+    const [isLoading,setisLoading] = useState(false)
     const [interviewData, setInterviewData] = useState({ id: null, data: {} })
     const [isCameraStarted, setCameraStarted] = useState(false)
     useEffect(() => {
@@ -26,6 +28,7 @@ function Interview({ params }) {
         console.log("interviewData", interviewData)
     }, [interviewData])
     const getInterviewDetails = async (id) => {
+        setisLoading(true)
         try {
             const q = query(collection(db, "mockInterview"), where("mockId", "==", id))
             const querySnapshot = await getDocs(q)
@@ -33,7 +36,9 @@ function Interview({ params }) {
                 setInterviewData({ docId: doc.id, data: doc.data() })
 
             })
+            setisLoading(false)
         } catch (err) {
+            setisLoading(false)
             console.log(err)
         }
 
@@ -43,7 +48,7 @@ function Interview({ params }) {
     return (
         <div className='my-10 flex flex-col md:flex-col'>
 
-
+            {isLoading &&<LoaderOverlay/>}
             <h2 className='font-bold text-2xl'>Let's get started</h2>
             <div className='flex flex-col md:flex-row'>
 
