@@ -1,39 +1,67 @@
-'use client'
+"use client";
+import React, { useEffect, useRef, useState } from "react";
+import { ModeToggleBtn } from "./_components/mode-toggle-btn";
+import SelectLanguages, {
+    selectedLanguageOptionProps,
+} from "./_components/SelectLanguages";
+import {
+    ResizableHandle,
+    ResizablePanel,
+    ResizablePanelGroup,
+} from "@/components/ui/resizable";
+import Editor from "@monaco-editor/react";
+import { useTheme } from "next-themes";
 
-import React, { useEffect, useState } from "react";
-import ReactMarkdown from "react-markdown";
-import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
-import { materialDark, prism } from "react-syntax-highlighter/dist/esm/styles/prism";
-import MonacoEditor from "@monaco-editor/react";
-import { Sun, MoonStar, RefreshCcw } from 'lucide-react'
-import { Button } from '@/components/ui/button'
+import { Loader, Play, TriangleAlert } from "lucide-react";
+import { codeSnippets, languageOptions } from "./_utils/utils";
+import { compileCode } from "./api"
+import toast,{Toaster} from "react-hot-toast";
+import { Button } from "@/components/ui/button";
+import ReactMarkdown from 'react-markdown'
 import { chatSession } from "@/utils/GeminiAIModal";
 import LoaderOverlay from "@/components/ui/loader";
+import Confetti from 'react-confetti'
+import useWindowSize from 'react-use/lib/useWindowSize'
+import { useRouter } from "next/navigation";
 
 
 
 
-const CodingPlatform = ({ params }) => {
-    const [code, setCode] = useState("// Write your solution here...");
-    const [language, setLanguage] = useState("javascript");
-    const [isDarkTheme, setIsDarkTheme] = useState(false);
+
+
+
+export default function EditorComponent({ params }) {
+    const { theme } = useTheme();
+    const { width, height } = useWindowSize()
+    const [sourceCode, setSourceCode] = useState(codeSnippets["javascript"]);
+    const [languageOption, setLanguageOption] = useState(languageOptions[0]);
+    const [loading, setLoading] = useState(false);
+    const [showCelebration, setShowCelebration] = useState(false);
+    const [fetchingFromGenAI, setfetchingFromGenAI] = useState(false);
+    const [output, setOutput] = useState([]);
+    const [err, setErr] = useState(false);
     const [problemMarkdown, setProblemMarkdown] = useState("")
-    const handleLanguageChange = (e) => setLanguage(e.target.value);
-    const [isLoading, setLoading] = useState(false)
-
-
+    const router = useRouter()
+    const editorRef = useRef(null);
+ 
+    function handleEditorDidMount(editor) {
+        editorRef.current = editor;
+        editor.focus();
+    }
+    function handleOnchange(value) {
+        if (value) {
+            setSourceCode(value);
+        }
+    }
     useEffect(() => {
-        console.log(params)
         generateProblem(params.topic, params.difficulty)
-    }, [])
-
-
+    }, [params])
     const generateProblem = async (top, diff) => {
         console.log("Generating problem with:", { top, diff })
-        setLoading(true)
-
+        setfetchingFromGenAI(true)
+        
         let prompt = `
-    Generate a ${diff} level coding problem related to ${top}. Include:
+Generate a ${diff} level coding problem related to ${top}. Include:
 1. A clear problem statement.
 2. Input format.
 3. Output format.
@@ -43,109 +71,198 @@ const CodingPlatform = ({ params }) => {
 
 
 Provide response in markdown
-    `
+`
         let result = await chatSession.sendMessage(prompt)
         console.log(result.response.text())
-        //let jsonResp = (result.response.text()).replace('```json','').replace('```','')
+      
 
         setProblemMarkdown(result.response.text())
 
-        setLoading(false)
-
+        setfetchingFromGenAI(false)
+        toast.success('Successfully loaded problem statement!')
 
 
 
 
     }
+    function onSelect(value) {
+        setLanguageOption(value);
+        setSourceCode(codeSnippets[value.language]);
+    }
+    const onSubmitHandler = ()=>{
+        setShowCelebration(true)
+        setTimeout(()=>{
+            setShowCelebration(false)
+            router.replace('/dashboard')
+        },5000)
+    }
+
+    async function executeCode() {
+        setLoading(true);
+        const requestData = {
+            language: languageOption.language,
+            version: languageOption.version,
+            files: [
+                {
+                    content: sourceCode,
+                },
+            ],
+        };
+        try {
+            const result = await compileCode(requestData);
+            setOutput(result.run.output.split("\n"));
+            console.log(result);
+            setLoading(false);
+            setErr(false);
+            toast.success("Compiled Successfully");
+        } catch (error) {
+            setErr(true);
+            setLoading(false);
+            toast.error("Failed to compile the Code");
+            console.log(error);
+        }
+    }
+    // console.log(languageOption);
     return (
-        <div className={`mx-0 mt-2 min-h-screen bg-gray-100 text-black p-5`}>
-            {isLoading && <LoaderOverlay />}
-            <div className="flex justify-between items-center mb-5">
-                <h1 className="text-2xl font-bold">Coding Playground</h1>
-
-                <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => setIsDarkTheme(!isDarkTheme)}
-                    className="w-10 h-10 relative"
-                >
-                    {isDarkTheme ? <Sun className="h-[1.2rem] w-[1.2rem]" />
-                        : <MoonStar className="h-[1.2rem] w-[1.2rem]" />}
-                </Button>
-
-
-            </div>
-
-            <div className="grid md:grid-cols-2 gap-6">
-                {/* Problem Statement */}
-                <div className="bg-gray-800 text-white p-5 rounded shadow-md overflow-auto max-h-[80vh]">
-                    <h2 className="text-xl font-bold mb-3">Problem Statement</h2>
-                    <ReactMarkdown
-                        className="p-4 bg-gray-700 rounded"
-                        components={{
-                            code({ node, inline, className, children, ...props }) {
-                                const match = /language-(\w+)/.exec(className || "");
-                                return !inline && match ? (
-                                    <SyntaxHighlighter
-                                        style={materialDark}
-                                        language={match[1]}
-                                        {...props}
-                                    >
-                                        {String(children).replace(/\n$/, "")}
-                                    </SyntaxHighlighter>
-                                ) : (
-                                    <code className={`${className} bg-gray-700 p-1 rounded`} {...props}>
-                                        {children}
-                                    </code>
-                                );
-                            },
-                        }}
-                    >
-                        {problemMarkdown}
-                    </ReactMarkdown>
-                </div>
-
-                {/* Code Editor */}
-                <div className="flex flex-col space-y-4">
-                    {/* Language Selector */}
-                    <div className="flex justify-between items-center">
-                        <label htmlFor="language" className="font-semibold">Programming Language:</label>
-
-                        <div className="flex flex-row">
-                            <Button className='mr-1'><RefreshCcw /> Run</Button>
-                            <select
-                                id="language"
-                                value={language}
-                                onChange={handleLanguageChange}
-                                className="bg-primary text-white p-2 rounded shadow-md focus:outline-none"
-                            >
-                                <option value="javascript">JavaScript</option>
-                                <option value="python">Python</option>
-                                <option value="java">Java</option>
-                                <option value="cpp">C++</option>
-                            </select>
-
-                        </div>
-                    </div>
-
-                    {/* Code Editor */}
-                    <div className="flex-grow">
-                        <MonacoEditor
-                            height="70vh"
-                            language={language}
-                            theme={isDarkTheme ? "vs-dark" : "light"}
-                            value={code}
-                            onChange={(value) => setCode(value)}
-                            options={{
-                                fontSize: 14,
-                                automaticLayout: true,
-                            }}
+        
+        <div className="min-h-screen bg-white shadow-2xl py-6 px-8">
+            {showCelebration && <Confetti
+      width={width}
+      height={height}
+    />}
+    <Toaster/>
+    {fetchingFromGenAI && <LoaderOverlay/>}
+            {/* EDITOR HEADER */}
+            <div className="flex items-center justify-between pb-3">
+                <h2 className="scroll-m-20  text-2xl font-semibold tracking-tight first:mt-0">
+                    Coding Playground
+                </h2>
+                <div className="flex items-center space-x-2 ">
+                    {/* <ModeToggleBtn /> */}
+                    <div className="w-[230px]">
+                        <SelectLanguages
+                            onSelect={onSelect}
+                            selectedLanguageOption={languageOption}
                         />
                     </div>
                 </div>
             </div>
+            {/* EDITOR  */}
+            <div className="bg-secondary p-3 rounded-2xl">
+                <ResizablePanelGroup
+                    direction="horizontal"
+                    className="w-full rounded-lg border"
+                >
+
+                    <ResizablePanel defaultSize={50}
+                    className="h-screen overflow-y-auto "
+                    >
+                        <ReactMarkdown
+                            className="p-4 rounded h-screen overflow-y-auto"
+                            components={{
+                                code({ node, inline, className, children, ...props }) {
+                                    const match = /language-(\w+)/.exec(className || "");
+                                    return !inline && match ? (
+                                        <SyntaxHighlighter
+
+                                            style={materialDark}
+                                            language={match[1]}
+                                            {...props}
+                                        >
+                                            {String(children).replace(/\n$/, "")}
+                                        </SyntaxHighlighter>
+                                    ) : (
+                                        <code className={`${className} bg-gray-700 p-2 w-auto mt-1 text-white rounded`} {...props}>
+                                            {children}
+                                        </code>
+                                    );
+                                },
+                            }}
+                        >
+                            {problemMarkdown}
+                        </ReactMarkdown>
+                    </ResizablePanel>
+
+                    <ResizablePanel defaultSize={50}>
+                        <ResizablePanelGroup
+                            direction='vertical'
+                            className="w-full rounded-lg border dark:bg-slate-900"
+                        >
+                            <ResizablePanel defaultSize={75} minSize={35}
+                            
+                            className="pt-8">
+                                <Editor
+                                    theme={theme === "dark" ? "vs-dark" : "vs-light"}
+                                    height="100vh"
+                                    
+                                    defaultLanguage={languageOption.language}
+                                    defaultValue={sourceCode}
+                                    onMount={handleEditorDidMount}
+                                    value={sourceCode}
+                                    onChange={handleOnchange}
+                                    language={languageOption.language}
+                                />
+                            </ResizablePanel>
+                            <ResizableHandle withHandle />
+                            <ResizablePanel defaultSize={25} >
+                                {/* Header */}
+                                <div className="space-y-3 bg-secondary min-h-screen">
+                                    <div className="flex items-center justify-between  bg-primary text-white  px-6 py-2">
+                                        <h2>Output</h2>
+                                        <div>
+
+                                     
+                                        {loading ? (
+                                            <Button
+                                                disabled
+                                                size={"sm"}
+                                                className="dark:bg-purple-600 dark:hover:bg-purple-700 text-slate-100 bg-slate-800 hover:bg-slate-900"
+                                            >
+                                                <Loader className="w-4 h-4 mr-2 animate-spin" />
+                                                <span>Running please wait...</span>
+                                            </Button>
+                                        ) : (
+                                            <Button
+                                                onClick={executeCode}
+                                                size={"sm"}
+                                                className="dark:bg-purple-600 dark:hover:bg-purple-700 text-slate-100 bg-slate-800 hover:bg-slate-900"
+                                            >
+                                                <Play className="w-4 h-4 mr-2 " />
+                                                <span>Run</span>
+                                            </Button>
+                                        )}
+                                        <Button 
+                                        onClick={()=>{onSubmitHandler()}}
+                                        className="bg-green-400 text-white ml-1 hover:text-white ">Submit</Button>
+                                        </div>
+                                    </div>
+                                    <div className=" px-6 space-y-2">
+                                        {err ? (
+                                            <div className="flex items-center space-x-2 text-red-500 border border-red-600 px-6 py-6">
+                                                <TriangleAlert className="w-5 h-5 mr-2 flex-shrink-0" />
+                                                <p className="text-xs">
+                                                    Failed to Compile the Code , Please try again !
+                                                </p>
+                                            </div>
+                                        ) : (
+                                            <>
+                                                {output.map((item) => {
+                                                    return (
+                                                        <p className="text-sm" key={item}>
+                                                            {item}
+                                                        </p>
+                                                    );
+                                                })}
+                                            </>
+                                        )}
+                                    </div>
+                                </div>
+                                {/* Body */}
+                            </ResizablePanel>
+                        </ResizablePanelGroup>
+                    </ResizablePanel>
+                </ResizablePanelGroup>
+            </div>
         </div>
     );
-};
-
-export default CodingPlatform;
+}
